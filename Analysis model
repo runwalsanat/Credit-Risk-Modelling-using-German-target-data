@@ -1,0 +1,332 @@
+import pandas as pd            #(THESE ARE THE LIBRARIES WE WILL USE)
+import numpy as np             #(THESE FOUR LIBRARIE ARE NEEDEED AS PANDAS FOR DATA ANALYSIS, NUMPY FOR MATHEMATICAL OPERATIONS)
+import matplotlib.pyplot as plt#(MATPLOTLIB FOR PLOTTING GRAPHS AND SEABORN FOR ADVANCED DATA VISUALIZATION)
+import seaborn as sns
+
+
+pd.set_option("display.max_columns", None) #(THIS WILL ALLOW US TO SEE ALL COLUMNS IN THE DATAFRAME WHEN PRINTING)
+sns.set_style("whitegrid")          #(SETTING THE STYLE FOR SEABORN PLOTS TO WHITEGRID FOR BETTER VISUAL APPEARANCE)
+df=pd.read_csv("german_credit_data.csv") #(READING THE DATA FROM A CSV FILE INTO A PANDAS DATAFRAME)
+df.head
+df["Age"].describe() #(DISPLAYING THE FIRST FEW ROWS OF THE DATAFRAME TO GET AN OVERVIEW OF THE DATA)
+df["Risk"].value_counts()#(GETTING A SUMMARY STATISTICS OF THE "AGE" COLUMN TO UNDERSTAND ITS DISTRIBUTION)
+df.shape #(COUNTING THE OCCURRENCES OF EACH UNIQUE VALUE IN THE "RISK" COLUMN)
+df.info() #(GETTING THE DIMENSIONS OF THE DATAFRAME - NUMBER OF ROWS AND COLUMNS)
+df.describe(include="all").T #(GETTING A SUMMARY OF THE DATAFRAME INCLUDING ALL COLUMNS, BOTH NUMERICAL AND CATEGORICAL)
+df["Job"].unique() #(GETTING THE UNIQUE VALUES IN THE "JOB" COLUMN TO UNDERSTAND THE DIFFERENT JOB CATEGORIES)
+df.isna().sum() #(CHECKING FOR MISSING VALUES IN EACH COLUMN OF THE DATAFRAME)  
+df.duplicated().sum() #(CHECKING FOR DUPLICATE ROWS IN THE DATAFRAME)
+df=df.dropna().reset_index(drop=True) #(DROPPING ANY ROWS WITH MISSING VALUES AND RESETTING THE INDEX)
+
+df.columns #(LISTING ALL THE COLUMN NAMES IN THE DATAFRAME)
+df[["Age","Credit amount","Duration"]].hist(bins=20,edgecolor='black') #(PLOTTING HISTOGRAMS FOR THE "AGE", "CREDIT AMOUNT", AND "DURATION" COLUMNS TO VISUALIZE THEIR DISTRIBUTIONS)
+plt.suptitle("Distribution of Numerical Features") #(ADDING A TITLE TO THE HISTOGRAMS)
+plt.show() #(DISPLAYING THE PLOTS)
+
+plt.figure(figsize=(15,5)) #(SETTING THE FIGURE SIZE FOR THE PLOT)
+for i, col in enumerate(["Age", "Credit amount", "Duration"]):  # Corrected: pass a list to enumerate
+    plt.subplot(1, 3, i + 1)  # Create subplots
+    sns.boxplot(y=df[col], color="skyblue")  # Plot boxplot for each feature
+    plt.title(col)  # Optional: add title for clarity
+
+plt.tight_layout()  # Adjust layout to prevent overlap
+plt.show()
+
+
+df.query("Duration > 70") #(IDENTIFYING POTENTIAL OUTLIERS IN THE "DURATION" COLUMN BY FILTERING VALUES GREATER THAN 70)      
+
+categorical_cols =["Sex","Job","Housing","Saving accounts","Checking account","Purpose","Risk"] #(DEFINING A LIST OF CATEGORICAL COLUMNS FOR ANALYSIS)
+
+plt.figure(figsize=(15, 10))  # Set the figure size
+
+for i, col in enumerate(categorical_cols):  # Loop through each categorical column
+    plt.subplot(3, 3, i + 1)  # Create a subplot
+    sns.countplot(data=df, x=col, palette="Set2", order=df[col].value_counts().index)  # Corrected: countplot, not counterplot
+    plt.title(f"Distribution of {col}")  # Corrected: use f-string to insert column name
+    plt.xticks(rotation=45)  # Rotate x-axis labels
+
+plt.tight_layout()  # Adjust layout
+plt.show()  # Display plots
+
+
+corr = df[["Age", "Job", "Credit amount", "Duration"]].corr()
+
+# Display the correlation matrix
+print(corr)
+
+# Plot the heatmap
+sns.heatmap(corr, annot=True, cmap="coolwarm")
+plt.title("Correlation Matrix of Selected Numerical Features")
+plt.show()
+
+ 
+
+avg_credit_by_job = df.groupby("Job")["Credit amount"].mean().sort_values(ascending=False)
+print("Average Credit Amount by Job:\n", avg_credit_by_job)
+
+# 2. Average credit amount by Sex (your comment says Duration by Purpose, but code is for Sex vs Credit)
+avg_credit_by_sex = df.groupby("Sex")["Credit amount"].mean().sort_values(ascending=False)
+print("\nAverage Credit Amount by Sex:\n", avg_credit_by_sex)
+
+# 3. Pivot table: Credit amount by Purpose and Risk
+pivot = pd.pivot_table(df, values="Credit amount", index="Purpose", columns="Risk")
+print("\nPivot Table (Credit Amount by Purpose and Risk):\n", pivot)
+
+# 4. Scatter plot: Duration vs Credit amount, colored by Risk
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    data=df,
+    x="Duration",
+    y="Credit amount",
+    hue="Risk",
+    palette="Set1",
+    size="Duration",
+    alpha=0.7
+)
+plt.title("Credit Amount vs Duration by Risk (Size = Duration)")
+plt.xlabel("Duration (months)")
+plt.ylabel("Credit Amount")
+plt.tight_layout()
+plt.show()
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. Violin plot: Credit amount vs Age, colored by Sex
+plt.figure(figsize=(10, 6))
+sns.violinplot(data=df, x="Age", y="Credit amount", hue="Sex", palette="Pastel1")
+plt.title("Credit Amount vs Age Colored by Sex")
+plt.tight_layout()
+plt.show()
+
+# 2. Violin plot: Credit amount vs Saving accounts
+plt.figure(figsize=(10, 6))
+sns.violinplot(data=df, x="Saving accounts", y="Credit amount", palette="Pastel2")
+plt.title("Credit Amount Distribution by Savings Accounts")
+plt.tight_layout()
+plt.show()
+
+risk_dist = df["Risk"].value_counts(normalize=True) * 100
+print("Risk Distribution (%):\n", risk_dist)
+
+# 2. Boxplots for numerical features by Risk
+plt.figure(figsize=(15, 5))
+for i, col in enumerate(["Age", "Credit amount", "Duration"]):
+    plt.subplot(1, 3, i + 1)
+    sns.boxplot(data=df, x="Risk", y=col, palette="Pastel2")
+    plt.title(f"Distribution of {col} by Risk")
+
+plt.tight_layout()
+plt.show()
+
+
+# 1. Grouping by Risk and calculating mean of numerical columns
+# Use a list, not a tuple, to select multiple columns
+print(df.groupby("Risk")[["Age", "Credit amount", "Duration"]].mean())
+
+# 2. Display the list of categorical columns
+print("Categorical Columns:", categorical_cols)
+
+# 3. Count plots for each categorical column segmented by Risk
+plt.figure(figsize=(10, 10))
+
+for i, col in enumerate(categorical_cols):
+    plt.subplot(3, 3, i + 1)
+    sns.countplot(
+        data=df,
+        x=col,
+        hue="Risk",
+        palette="Pastel1",
+        order=df[col].value_counts().index  # ✅ Fixed typo: 'oder' → 'order'
+    )
+    plt.title(f"Distribution of {col} by Risk")
+    plt.xticks(rotation=45)
+
+plt.tight_layout()
+plt.show()
+
+
+# Feature Engineering and Data Preprocessing would follow here in a complete analysis model.
+# Define the features and target
+features = ["Age", "Job", "Credit amount", "Duration", "Sex", "Housing", "Saving accounts", "Checking account", "Purpose"]
+target = "Risk"
+
+# Create a new DataFrame with selected features and target
+df_model = df[features + [target]].copy()
+
+# Display the first few rows
+df_model.head()
+
+from sklearn.preprocessing import LabelEncoder
+import joblib   
+
+# Initialize dictionary to store encoders
+le_dict = {}
+
+# Ensure categorical_cols is defined and valid
+print("Categorical Columns:", categorical_cols)
+
+# Encode each categorical column
+for col in categorical_cols:
+    le = LabelEncoder()
+    df_model[col] = le.fit_transform(df_model[col].astype(str))  # Convert to string to avoid NaN issues
+    le_dict[col] = le
+    joblib.dump(le, f"{col}_label_encoder.pkl")  # Save encoder for future use  
+
+from sklearn.preprocessing import LabelEncoder
+import joblib
+
+# Initialize label encoder for the target
+le_target = LabelEncoder()
+
+# Encode the target variable
+df_model[target] = le_target.fit_transform(df_model[target].astype(str))
+
+# Display value counts of encoded target
+print("Encoded Target Distribution:\n", df_model[target].value_counts())
+
+# Save the target label encoder
+#joblib.dump(le_target, "best_model.pkl")
+
+# Show the first few rows of the encoded model dataframe
+df_model.head()
+
+from sklearn.model_selection import train_test_split
+import joblib
+t_t_s=train_test_split
+
+# Define features and target
+X = df_model.drop(columns=[target])
+y = df_model[target]
+
+# Display unique values for Savings and Checking accounts
+print("Savings accounts:", df["Saving accounts"].unique())
+print("Checking accounts:", df["Checking account"].unique())
+
+# Split the data with stratification
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=2, stratify=y
+)
+
+# Display shapes of training and test sets
+print("X_train shape:", X_train.shape)
+print("X_test shape:", X_test.shape)
+#joblib.dump(t_t_s, "best_model.pkl")
+
+
+
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
+import joblib
+
+def train_model(model, param_grid, X_train, y_train, X_test, y_test):
+    # Grid search for hyperparameter tuning
+    grid = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+    grid.fit(X_train, y_train)
+
+    # Best model and predictions
+    best_model = grid.best_estimator_
+    y_pred = best_model.predict(X_test)
+
+    # Evaluation
+    acc = accuracy_score(y_test, y_pred)
+    best_params = grid.best_params_
+
+    return best_model, acc, best_params
+#joblib.dump(train_model, "best_model.pkl") 
+print("Model successfully saved as best_model.pkl")
+
+dt = DecisionTreeClassifier(random_state=1, class_weight="balanced")  # Fixed: class_weight (not class_weights)
+dt_param_grid = {
+    "max_depth": [3, 5, 7, 9, None],
+    "min_samples_split": [2, 5, 10],
+    "min_samples_leaf": [1, 2, 4]
+}
+
+best_dt, dt_acc, dt_best_params = train_model(dt, dt_param_grid, X_train, y_train, X_test, y_test)
+
+print("Decision Tree Accuracy:", dt_acc)
+print("Best Parameters:", dt_best_params)
+#joblib.dump(DecisionTreeClassifier, "best_model.pkl")
+print("Model successfully saved as best_model.pkl")
+
+rf = RandomForestClassifier(random_state=1, class_weight="balanced")  # Corrected: class_weight
+
+rf_param_grid = {
+    "n_estimators": [100, 200],
+    "max_depth": [5, 7, 10, None],
+    "min_samples_split": [2, 5, 10],
+    "min_samples_leaf": [1, 2, 4]
+}
+
+best_rf, rf_acc, rf_best_params = train_model(rf, rf_param_grid, X_train, y_train, X_test, y_test)
+
+print("Random Forest Accuracy:", rf_acc)
+print("Best Parameters:", rf_best_params)
+#joblib.dump(RandomForestClassifier, "best_model.pkl")
+print("Model successfully saved as best_model.pkl")
+
+from sklearn.ensemble import ExtraTreesClassifier
+
+# Initialize Extra Trees Classifier
+et = ExtraTreesClassifier(random_state=1, class_weight="balanced", n_jobs=-1)
+
+# Define hyperparameter grid
+et_param_grid = {
+    "n_estimators": [100, 200],
+    "max_depth": [5, 7, 10, None],
+    "min_samples_split": [2, 5, 10],
+    "min_samples_leaf": [1, 2, 4]
+}
+
+# Train and evaluate
+best_et, et_acc, et_best_params = train_model(et, et_param_grid, X_train, y_train, X_test, y_test)
+
+# Print results
+print("Extra Trees Accuracy:", et_acc)
+print("Best Parameters:", et_best_params)
+#joblib.dump(et, "best_model.pkl")
+print("Model successfully saved as best_model.pkl")
+
+from xgboost import XGBClassifier
+
+# Initialize XGBoost with class imbalance handling
+xgb = XGBClassifier(
+    random_state=1,
+    scale_pos_weight=(y_train == 0).sum() / (y_train == 1).sum(),
+    use_label_encoder=False,
+    eval_metric="logloss"
+)
+
+# Define hyperparameter grid
+xgb_param_grid = {
+    "n_estimators": [100, 200],
+    "max_depth": [5, 7, 10],
+    "learning_rate": [0.01, 0.1, 0.2],
+    "subsample": [0.8, 1],
+    "colsample_bytree": [0.8, 1]
+}
+ 
+
+# Train and evaluate
+best_xgb, xgb_acc, xgb_best_params = train_model(xgb, xgb_param_grid, X_train, y_train, X_test, y_test)
+
+# Print results
+print("XGBoost Accuracy:", xgb_acc)
+print("Best Parameters:", xgb_best_params)
+joblib.dump(best_xgb, "final_credit_risk_model.pkl")
+print("Model successfully saved as best_model.pkl")
+    
+# Load the saved model
+model = joblib.load("final_credit_risk_model.pkl")
+
+
+# Make predictions
+predictions = model.predict(X_test)
+
+
